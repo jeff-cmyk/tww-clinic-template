@@ -13,34 +13,55 @@ structured data Google reads.
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/jeff-cmyk/tww-clinic-template)
 
-That button copies this template into a new GitHub repo, creates a Netlify site,
-and deploys it. Three clicks and the site is live with blank placeholder content.
+### 1. Deploy
 
-Four steps remain, and they have to be done by hand — **Netlify has no API for
-enabling Identity or Git Gateway**, so no script can do them for you.
+The button copies this template into a new GitHub repo, creates a Netlify site,
+and deploys it. Give the repo a clinic-specific name, e.g. `tww-appleton`.
 
-### 1. Turn on Identity
-Site configuration → **Identity** → Enable.
+### 2. Create the site in DecapBridge
 
-### 2. Set registration to invite-only
-Identity → Registration → **Invite only**.
+At [decapbridge.com](https://decapbridge.com), add a site:
 
-> Skipping this leaves the admin panel open to public signup. Anyone who finds
-> the URL could register and edit a medical clinic's website. Do not skip it.
+| Field | Value |
+| :---- | :---- |
+| GitHub repository | `jeff-cmyk/tww-appleton` — must be `owner/repo` |
+| Decap CMS login URL | `https://<your-site>/admin/` — keep the trailing slash |
+| GitHub token | A token with **Contents: Read and write** |
 
-### 3. Turn on Git Gateway
-Identity → Services → **Enable Git Gateway**.
+> The token needs **write** access. A read-only token lets staff log in and edit
+> perfectly, then fails only when they press Publish — with an error that says
+> nothing about permissions. Scope the token to all clinic repos so this is a
+> one-time setup rather than a per-clinic step.
 
-> Git Gateway is [deprecated](https://docs.netlify.com/manage/security/secure-access-to-sites/git-gateway/).
-> It still works and existing sites are unaffected, but Netlify no longer fixes
-> bugs in it. It is what lets the CMS commit to the repo, so it is required until
-> the template moves to a different auth backend.
+### 3. Add the site id to Netlify
+
+Copy the site id out of the URLs DecapBridge generates — the UUID in
+`/sites/<site-id>/pkce` — and in Netlify add it as an environment variable:
+
+```
+DECAP_SITE_ID = <site-id>
+```
+
+Then redeploy. **No code changes are needed**: `/admin/config.yml` is generated
+at build time from this variable plus `REPOSITORY_URL`, which Netlify sets
+itself. See `src/pages/admin/config.yml.ts`.
+
+If you skip this, the CMS config is still served but carries a plain-English
+warning at the top saying exactly what is missing.
 
 ### 4. Invite the clinic's staff
-Identity → **Invite users** → their email. They will get a confirmation link.
 
-Then hand them `https://<their-site>/admin/` and they can fill in the site
-themselves. Optionally add a custom domain under Domain management.
+In DecapBridge, invite them by email. They sign in with a password, Google or
+Microsoft — no GitHub account required.
+
+Then hand them `https://<your-site>/admin/`.
+
+> **Why not Netlify Identity?** Netlify has
+> [deprecated Git Gateway](https://docs.netlify.com/manage/security/secure-access-to-sites/git-gateway/)
+> and no longer fixes bugs in it. It also stored the target repository as hidden
+> internal state, which meant a CMS could silently start reading the wrong repo
+> after a rename, with no error at all. DecapBridge names the repo in
+> `config.yml`, so that failure cannot happen.
 
 ---
 

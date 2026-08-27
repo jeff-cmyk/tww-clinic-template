@@ -107,9 +107,6 @@ const schema = {
 
   <title>{title}</title>
 
-  <!-- Netlify Identity -->
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-
   <!-- Local Business Schema -->
   <script type="application/ld+json" set:html={JSON.stringify(schema)} />
 
@@ -176,15 +173,6 @@ const schema = {
     utmKeys.forEach(key => {
       if (params.has(key)) sessionStorage.setItem(key, params.get(key));
     });
-  </script>
-  <!-- Netlify Identity — redirect invite/recovery tokens to admin -->
-  <script>
-    if (window.location.hash && window.location.hash.includes('invite_token')) {
-      window.location.href = '/admin/' + window.location.hash;
-    }
-    if (window.location.hash && window.location.hash.includes('recovery_token')) {
-      window.location.href = '/admin/' + window.location.hash;
-    }
   </script>
 </body>
 </html>
