@@ -1,0 +1,558 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import RichText from '../components/RichText.astro';
+import BioModal from '../components/BioModal.astro';
+import { getCollection } from 'astro:content';
+
+const clinics = await getCollection('clinic');
+const clinic = clinics[0].data;
+
+const aboutImage = clinic.about.image ?? null;
+// Always use shortName for the city highlight — stays in sync automatically
+const headlineCity = clinic.shortName;
+const headlinePrefix = clinic.hero.headline.includes(' in ')
+  ? clinic.hero.headline.split(' in ').slice(0, -1).join(' in ') + ' in'
+  : 'Doing Health Differently in';
+
+const heroStyle = clinic.hero.image
+  ? `background-image: linear-gradient(to right, rgba(10,10,10,0.92) 50%, rgba(10,10,10,0.4) 100%), url(${clinic.hero.image}); background-size: cover; background-position: center;`
+  : '';
+
+const scheduleUrl = clinic.scheduling.type === 'neo' && clinic.scheduling.neoUrl
+  ? clinic.scheduling.neoUrl
+  : '/contact';
+---
+
+<BaseLayout>
+  <Nav />
+
+  <main>
+
+    <!-- ── Hero ─────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="hero__bg" style={heroStyle}></div>
+      <div class="container hero__content">
+        <p class="label hero__label">The Wellness Way — {clinic.address.city}, {clinic.address.state}</p>
+        <h1 class="hero__headline">
+          <span class="hero__headline-lead">{headlinePrefix}</span>
+          <span class="hero__headline--green">{headlineCity}</span>
+        </h1>
+        <p class="hero__subhead">{clinic.hero.subhead}</p>
+        <div class="hero__actions">
+          <a href={scheduleUrl} class="btn btn--primary">{clinic.hero.ctaText}</a>
+          <a href="/about" class="btn btn--outline-light">Learn Our Approach</a>
+        </div>
+      </div>
+      <div class="hero__scroll-indicator">
+        <span></span>
+      </div>
+    </section>
+
+    <!-- ── Trust Bar ─────────────────────────────────────── -->
+    <section class="trust-bar">
+      <div class="container trust-bar__grid">
+        <div class="trust-bar__item">
+          <strong>Comprehensive Testing</strong>
+          <span>Not guesswork — real diagnostics</span>
+        </div>
+        <div class="trust-bar__divider"></div>
+        <div class="trust-bar__item">
+          <strong>Personalized Care</strong>
+          <span>No one-size-fits-all protocols</span>
+        </div>
+        <div class="trust-bar__divider"></div>
+        <div class="trust-bar__item">
+          <strong>Root Cause Focus</strong>
+          <span>Beyond symptom management</span>
+        </div>
+        <div class="trust-bar__divider"></div>
+        <div class="trust-bar__item">
+          <strong>Part of a National Network</strong>
+          <span>The Wellness Way — 66+ clinics</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── About ─────────────────────────────────────────── -->
+    <section class="section about">
+      <div class="container about__grid">
+        <div class="about__visual reveal">
+          <div class="about__image-block">
+            {clinic.about.image
+            ? <img src={clinic.about.image} alt={clinic.about.headline} class="about__image" />
+            : <div class="about__image-placeholder"></div>
+          }
+            <div class="about__mission accent-bar reveal reveal-delay-2">
+              <p>"{clinic.about.missionStatement}"</p>
+            </div>
+          </div>
+        </div>
+        <div class="about__content reveal reveal-delay-1">
+          <p class="label">{clinic.address.city}, {clinic.address.state}</p>
+          <h2 class="display-lg about__headline">{clinic.about.headline}</h2>
+          <RichText text={clinic.about.body} class="about__body" clampLines={8} />
+          <a href="/about" class="btn btn--outline-dark">Our Story</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Services ──────────────────────────────────────── -->
+    <section class="section section--tint services">
+      <div class="container">
+        <div class="services__header reveal">
+          <p class="label">What We Offer</p>
+          <h2 class="display-lg">How We Help</h2>
+        </div>
+        <div class="services__grid">
+          {clinic.services.map((service, i) => (
+            <div class={`service-card reveal reveal-delay-${i + 1}`}>
+              <div class="service-card__number">0{i + 1}</div>
+              <h3 class="service-card__name">{service.name}</h3>
+              <RichText text={service.description} class="service-card__desc" clampLines={5} />
+            </div>
+          ))}
+        </div>
+        <div class="services__cta reveal">
+          <a href="/services" class="btn btn--outline-dark">View All Services</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Team ──────────────────────────────────────────── -->
+    <section class="section team">
+      <div class="container">
+        <div class="team__header reveal">
+          <p class="label">Your Care Team</p>
+          <h2 class="display-lg">Meet the Doctor</h2>
+        </div>
+        <div class="team__grid">
+          {clinic.team.map((member, i) => (
+            <div class={`team-card reveal reveal-delay-${i + 1}`}>
+              <div class="team-card__photo">
+                {member.photo
+                  ? <img src={member.photo} alt={member.name} />
+                  : <div class="team-card__photo-placeholder"></div>
+                }
+              </div>
+              <div class="team-card__info">
+                <h3 class="team-card__name display-sm">{member.name}</h3>
+                <p class="team-card__role label">{member.role}</p>
+                <BioModal name={member.name} role={member.role} bio={member.bio} photo={member.photo} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA Band ───────────────────────────────────────── -->
+    <section class="cta-band section--dark section reveal">
+      <div class="container cta-band__inner">
+        <div class="cta-band__content">
+          <p class="label">Take the First Step</p>
+          <h2 class="display-lg cta-band__headline">
+            Your Body Is Not<br/>
+            <span class="cta-band__headline--green">Broken.</span>
+          </h2>
+          <p class="cta-band__sub">
+            You just haven't found the right answers yet. We're here to help you find them —
+            in {clinic.address.city} and beyond.
+          </p>
+        </div>
+        <div class="cta-band__actions">
+          <a href={scheduleUrl} class="btn btn--primary">{clinic.scheduling.ctaText}</a>
+          <a href="/contact" class="btn btn--outline-light">Get Directions</a>
+          <p class="cta-band__phone">
+            Or call us: <a href={`tel:${clinic.phone}`}>{clinic.phone}</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  /* ── Hero ───────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    background-color: var(--dark);
+  }
+
+  .hero__content {
+    position: relative;
+    z-index: 1;
+    padding-block: 8rem;
+    max-width: 42rem;
+  }
+
+  .hero__label {
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.2s forwards;
+  }
+
+  .hero__headline {
+    font-size: clamp(1.5rem, calc(0.4rem + 6vw), 4.25rem);
+    color: var(--off-white);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.4s forwards;
+  }
+
+  .hero__headline--green {
+    color: var(--green);
+  }
+
+  /* Each half owns its own line, so "Doing Health Differently in" can never
+     break mid-phrase and the city is always on line two. The font size above
+     is tuned so the lead line fits its container at every viewport width. */
+  .hero__headline-lead,
+  .hero__headline--green {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .hero__subhead {
+    font-size: 1.1rem;
+    color: rgba(245,242,236,0.75);
+    margin-bottom: 2.5rem;
+    max-width: 36rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.6s forwards;
+  }
+
+  .hero__actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.8s forwards;
+  }
+
+  .hero__scroll-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+
+  .hero__scroll-indicator span {
+    display: block;
+    width: 1px;
+    height: 3rem;
+    background: linear-gradient(to bottom, transparent, var(--green));
+    animation: scrollLine 1.5s ease infinite;
+  }
+
+  /* ── Trust Bar ──────────────────────────────────────────── */
+  .trust-bar {
+    background: var(--black);
+    color: var(--off-white);
+    padding-block: 1.75rem;
+  }
+
+  .trust-bar__grid {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .trust-bar__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .trust-bar__item strong {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--off-white);
+  }
+
+  .trust-bar__item span {
+    font-size: 0.75rem;
+    color: #8A9A8E;
+  }
+
+  .trust-bar__divider {
+    width: 1px;
+    height: 2rem;
+    background: rgba(255,255,255,0.1);
+    flex-shrink: 0;
+  }
+
+  /* ── About ──────────────────────────────────────────────── */
+  .about__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+  }
+
+  .about__image-block {
+    position: relative;
+  }
+
+  .about__image {
+    width: 100%;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+  }
+
+  .about__image-placeholder {
+    width: 100%;
+    aspect-ratio: 4/5;
+    background: var(--gray-light);
+    background: linear-gradient(135deg, var(--off-white) 0%, #e0ddd8 100%);
+  }
+
+  .about__mission {
+    position: absolute;
+    bottom: -2rem;
+    right: -2rem;
+    background: var(--white);
+    padding: 1.5rem 1.75rem;
+    max-width: 20rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  }
+
+  .about__mission p {
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--black);
+    line-height: 1.6;
+    max-width: none;
+  }
+
+  .about__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .about__headline {
+    color: var(--black);
+  }
+
+  /* Typography for this block lives in global.css — RichText.astro renders it
+     under its own style scope, so a scoped rule here would not apply. */
+
+  /* ── Services ───────────────────────────────────────────── */
+  .services__header {
+    margin-bottom: 3rem;
+  }
+
+  .services__header h2 {
+    margin-top: 0.5rem;
+  }
+
+  .services__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+  }
+
+  .service-card {
+    background: var(--off-white);
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: background 0.2s ease;
+  }
+
+  .service-card:hover {
+    background: var(--white);
+  }
+
+  .service-card__number {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    color: var(--green);
+    line-height: 1;
+  }
+
+  .service-card__name {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--black);
+    line-height: 1.1;
+  }
+
+
+  .services__cta {
+    margin-top: 3rem;
+  }
+
+  /* ── Team ───────────────────────────────────────────────── */
+  .team__header {
+    margin-bottom: 3rem;
+  }
+
+  .team__header h2 {
+    margin-top: 0.5rem;
+  }
+
+  .team__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 3rem;
+  }
+
+  .team-card {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .team-card__photo {
+    aspect-ratio: 3/4;
+    overflow: hidden;
+  }
+
+  .team-card__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .team-card__photo-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--off-white) 0%, #ddd 100%);
+  }
+
+  .team-card__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+  }
+
+  .team-card__name {
+    color: var(--black);
+  }
+
+
+  /* ── CTA Band ───────────────────────────────────────────── */
+  .cta-band__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .cta-band__headline {
+    color: var(--off-white);
+    margin-block: 1rem;
+  }
+
+  .cta-band__headline--green {
+    color: var(--green);
+  }
+
+  .cta-band__sub {
+    color: #8A9A8E;
+    font-size: 0.95rem;
+  }
+
+  .cta-band__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .cta-band__phone {
+    font-size: 0.875rem;
+    color: #8A9A8E;
+    max-width: none;
+    margin-top: 0.5rem;
+  }
+
+  .cta-band__phone a {
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  /* ── Animations ─────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scrollLine {
+    0%   { transform: scaleY(0); transform-origin: top; }
+    50%  { transform: scaleY(1); transform-origin: top; }
+    51%  { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* ── Responsive ─────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .about__grid {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+
+    .about__mission {
+      position: static;
+      margin-top: 1.5rem;
+    }
+
+    .cta-band__inner {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .team-card {
+      grid-template-columns: 140px 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .hero__actions {
+      flex-direction: column;
+    }
+
+    .trust-bar__divider {
+      display: none;
+    }
+
+    .trust-bar__grid {
+      gap: 1rem;
+    }
+
+    .team-card {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+<style>
+  .hero__bg[style] {
+    background-size: cover !important;
+    background-position: center !important;
+  }
+</style>

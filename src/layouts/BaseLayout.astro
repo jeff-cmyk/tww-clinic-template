@@ -1,0 +1,190 @@
+---
+import '../styles/global.css';
+import { getCollection } from 'astro:content';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const clinics = await getCollection('clinic');
+const clinic = clinics[0].data;
+
+const {
+  title = clinic.seo.title,
+  description = clinic.seo.description,
+  ogImage = clinic.hero.image ?? '/images/tww-logo-white.png',
+} = Astro.props;
+
+// Social platforms reject relative image paths, so resolve against the site URL.
+const ogImageUrl = Astro.site ? new URL(ogImage, Astro.site).href : ogImage;
+
+// Map day names to schema day format
+const dayMap: Record<string, string> = {
+  monday: 'Monday',
+  tuesday: 'Tuesday',
+  wednesday: 'Wednesday',
+  thursday: 'Thursday',
+  friday: 'Friday',
+  saturday: 'Saturday',
+  sunday: 'Sunday',
+};
+
+// Parse "9:00am – 6:00pm" into 24hr open/close for schema
+function parseHours(str: string): { opens: string; closes: string } | null {
+  if (!str || str.toLowerCase() === 'closed') return null;
+  const match = str.match(/(\d+):(\d+)(am|pm)\s*[–-]\s*(\d+):(\d+)(am|pm)/i);
+  if (!match) return null;
+  const to24 = (h: string, m: string, ampm: string) => {
+    let hour = parseInt(h);
+    if (ampm.toLowerCase() === 'pm' && hour !== 12) hour += 12;
+    if (ampm.toLowerCase() === 'am' && hour === 12) hour = 0;
+    return `${String(hour).padStart(2, '0')}:${m}`;
+  };
+  return {
+    opens:  to24(match[1], match[2], match[3]),
+    closes: to24(match[4], match[5], match[6]),
+  };
+}
+
+const openingHours = Object.entries(clinic.hours)
+  .map(([day, hours]) => {
+    const parsed = parseHours(hours);
+    if (!parsed) return null;
+    return {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": dayMap[day],
+      "opens": parsed.opens,
+      "closes": parsed.closes,
+    };
+  })
+  .filter(Boolean);
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "MedicalBusiness",
+  "name": clinic.name,
+  "description": clinic.seo.description,
+  "telephone": clinic.phone,
+  "email": clinic.email,
+  "url": Astro.site,
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": clinic.address.street,
+    "addressLocality": clinic.address.city,
+    "addressRegion": clinic.address.state,
+    "postalCode": clinic.address.zip,
+    "addressCountry": "US"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": clinic.address.lat,
+    "longitude": clinic.address.lng
+  },
+  "openingHoursSpecification": openingHours
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={ogImageUrl} />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImageUrl} />
+
+  <title>{title}</title>
+
+  <!-- Netlify Identity -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+  <!-- Local Business Schema -->
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <!-- GA4 -->
+  {clinic.tracking.ga4 && (
+    <>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${clinic.tracking.ga4}`}></script>
+      <script define:vars={{ ga4Id: clinic.tracking.ga4 }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', ga4Id);
+      </script>
+    </>
+  )}
+
+  <!-- Meta Pixel -->
+  {clinic.tracking.metaPixel && (
+    <script define:vars={{ pixelId: clinic.tracking.metaPixel }}>
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+      document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', pixelId);
+      fbq('track', 'PageView');
+    </script>
+  )}
+
+  <!-- Custom head scripts -->
+  {clinic.tracking.customHeadScripts && (
+    <Fragment set:html={clinic.tracking.customHeadScripts} />
+  )}
+</head>
+<body>
+  <slot />
+
+  <!-- Scroll reveal -->
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(el => {
+        if (el.isIntersecting) {
+          el.target.classList.add('visible');
+          observer.unobserve(el.target);
+        }
+      });
+    }, {
+      // Fire as soon as any part of the element crosses the trigger line,
+      // rather than waiting for 10% of it to be on screen — on a tall section
+      // that 10% was a long scroll.
+      threshold: 0,
+      // Extends the viewport's bottom edge downwards, so elements start
+      // fading in just before they scroll into view instead of after.
+      rootMargin: '0px 0px 20% 0px',
+    });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+
+  <!-- UTM capture -->
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const utmKeys = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
+    utmKeys.forEach(key => {
+      if (params.has(key)) sessionStorage.setItem(key, params.get(key));
+    });
+  </script>
+  <!-- Netlify Identity — redirect invite/recovery tokens to admin -->
+  <script>
+    if (window.location.hash && window.location.hash.includes('invite_token')) {
+      window.location.href = '/admin/' + window.location.hash;
+    }
+    if (window.location.hash && window.location.hash.includes('recovery_token')) {
+      window.location.href = '/admin/' + window.location.hash;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+---
+import { getCollection } from 'astro:content';
+
+const clinics = await getCollection('clinic');
+const clinic = clinics[0].data;
+
+const navLinks = [
+  { label: 'About',    href: '/about' },
+  { label: 'Services', href: '/services' },
+  { label: 'Contact',  href: '/contact' },
+];
+---
+
+<header class="nav-wrapper">
+  <nav class="nav container">
+
+    <!-- Logo -->
+    <a href="/" class="nav__logo">
+      <img src="/images/tww-logo-white.png" alt={clinic.name} width="120" height="48" />
+    </a>
+
+    <!-- Links -->
+    <ul class="nav__links" id="nav-links">
+      {navLinks.map(link => (
+        <li>
+          <a href={link.href} class="nav__link">{link.label}</a>
+        </li>
+      ))}
+      {clinic.store?.enabled && clinic.store?.url && (
+      <li><a href={clinic.store.url} target="_blank" rel="noopener noreferrer" class="nav__link">Shop</a></li>
+    )}
+  </ul>
+
+    <!-- CTA + Hamburger -->
+    <div class="nav__actions">
+      <a href={clinic.scheduling.neoUrl || '/contact'} class="btn btn--primary nav__cta">
+        {clinic.scheduling.ctaText}
+      </a>
+      <button class="nav__hamburger" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+  </nav>
+</header>
+
+<style>
+  .nav-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--dark);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    height: 5rem;
+  }
+
+  .nav__logo img {
+    height: 2.5rem;
+    width: auto;
+  }
+
+  .nav__links {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    list-style: none;
+    margin: 0 auto;
+  }
+
+  .nav__link {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--off-white);
+    transition: color 0.2s ease;
+  }
+
+  .nav__link:hover {
+    color: var(--green);
+  }
+
+  .nav__actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .nav__cta {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  /* Hamburger */
+  .nav__hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+  }
+
+  .nav__hamburger span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--off-white);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .nav__hamburger.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .nav__hamburger.open span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav__hamburger.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .nav__links {
+      display: none;
+      position: absolute;
+      top: 5rem;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      background: var(--dark);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 1rem 0;
+    }
+
+    .nav__links.open {
+      display: flex;
+    }
+
+    .nav__links li {
+      width: 100%;
+    }
+
+    .nav__link {
+      display: block;
+      padding: 0.9rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .nav__cta {
+      display: none;
+    }
+
+    .nav__hamburger {
+      display: flex;
+    }
+  }
+</style>
+
+<script>
+  const toggle = document.getElementById('nav-toggle');
+  const links  = document.getElementById('nav-links');
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = toggle.classList.toggle('open');
+    links?.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+  });
+</script>

@@ -1,0 +1,266 @@
+---
+import { getCollection } from 'astro:content';
+
+const clinics = await getCollection('clinic');
+const clinic = clinics[0].data;
+
+const navLinks = [
+  { label: 'About',       href: '/about' },
+  { label: 'Services',    href: '/services' },
+  { label: 'Contact',     href: '/contact' },
+  { label: 'New Patient', href: '/new-patient' },
+];
+
+const days = [
+  { key: 'monday',    label: 'Mon' },
+  { key: 'tuesday',   label: 'Tue' },
+  { key: 'wednesday', label: 'Wed' },
+  { key: 'thursday',  label: 'Thu' },
+  { key: 'friday',    label: 'Fri' },
+  { key: 'saturday',  label: 'Sat' },
+  { key: 'sunday',    label: 'Sun' },
+] as const;
+
+const scheduleUrl = clinic.scheduling.type === 'neo' && clinic.scheduling.neoUrl
+  ? clinic.scheduling.neoUrl
+  : '/contact';
+---
+
+<footer class="footer">
+  <div class="container footer__grid">
+
+    <!-- Brand col -->
+    <div class="footer__brand" style="display:flex;flex-direction:column;align-items:flex-start;">
+      <img src="/images/tww-logo-white.png" alt={clinic.name} width="120" height="48" />
+      <p class="footer__tagline">{clinic.tagline}</p>
+      <p class="footer__address">
+        {clinic.address.street}<br />
+        {clinic.address.city}, {clinic.address.state} {clinic.address.zip}
+      </p>
+      <a href={`tel:${clinic.phone}`} class="footer__phone">{clinic.phone}</a>
+    </div>
+
+    <!-- Nav col -->
+    <div class="footer__nav">
+      <p class="label footer__col-label">Pages</p>
+      <ul>
+        {navLinks.map(link => (
+          <li><a href={link.href} class="footer__link">{link.label}</a></li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- Hours col -->
+    <div class="footer__hours">
+      <p class="label footer__col-label">Hours</p>
+      <table class="hours-table">
+        <tbody>
+          {days.map(({ key, label }) => (
+            <tr class={clinic.hours[key].toLowerCase() === 'closed' ? 'closed' : ''}>
+              <td class="hours-table__day">{label}</td>
+              <td class="hours-table__time">{clinic.hours[key]}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CTA col -->
+    <div class="footer__cta">
+      <p class="label footer__col-label">Ready to start?</p>
+      <p class="footer__cta-text">Take the first step toward restoring your health.</p>
+      <a href={scheduleUrl} class="btn btn--primary footer__btn">
+        Book Appointment
+      </a>
+
+      {(clinic.social.facebook || clinic.social.instagram || clinic.social.youtube) && (
+        <div class="footer__social">
+          {clinic.social.facebook && (
+            <a href={clinic.social.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+          )}
+          {clinic.social.instagram && (
+            <a href={clinic.social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            </a>
+          )}
+          {clinic.social.youtube && (
+            <a href={clinic.social.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+
+  </div>
+
+  <div class="footer__bottom container">
+    <p class="footer__legal">
+      &copy; {new Date().getFullYear()} {clinic.name}. All rights reserved.
+      Part of <a href="https://thewellnessway.com" target="_blank" rel="noopener noreferrer">The Wellness Way</a> network.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--dark);
+    color: var(--off-white);
+  }
+
+  .footer__grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    gap: 3rem;
+    padding-block: 4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .footer__brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .footer__brand img {
+    height: 2.5rem;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .footer__tagline {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    letter-spacing: 0.05em;
+    color: var(--green);
+    max-width: none;
+  }
+
+  .footer__address {
+    font-size: 0.8rem;
+    color: #8A9A8E;
+    line-height: 1.7;
+    max-width: none;
+  }
+
+  .footer__phone {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--off-white);
+    transition: color 0.2s;
+  }
+  .footer__phone:hover { color: var(--green); }
+
+  .footer__col-label {
+    display: block;
+    margin-bottom: 1.25rem;
+  }
+
+  .footer__nav ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .footer__link {
+    font-size: 0.875rem;
+    color: #8A9A8E;
+    transition: color 0.2s;
+  }
+  .footer__link:hover { color: var(--off-white); }
+
+  /* Hours table */
+  .hours-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  .hours-table tr {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .hours-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .hours-table td {
+    padding: 0.4rem 0;
+  }
+
+  .hours-table__day {
+    color: #8A9A8E;
+    width: 2.5rem;
+    font-weight: 500;
+  }
+
+  .hours-table__time {
+    color: var(--off-white);
+    text-align: right;
+  }
+
+  .hours-table tr.closed .hours-table__time {
+    color: #555;
+  }
+
+  /* CTA col */
+  .footer__cta {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .footer__cta-text {
+    font-size: 0.875rem;
+    color: #8A9A8E;
+    max-width: none;
+  }
+
+  .footer__btn {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .footer__social {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .footer__social a {
+    color: #8A9A8E;
+    transition: color 0.2s;
+  }
+  .footer__social a:hover { color: var(--green); }
+
+  /* Bottom bar */
+  .footer__bottom {
+    padding-block: 1.5rem;
+  }
+
+  .footer__legal {
+    font-size: 0.75rem;
+    color: #8A9A8E;
+    max-width: none;
+  }
+
+  .footer__legal a {
+    color: var(--green);
+  }
+
+  @media (max-width: 900px) {
+    .footer__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .footer__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,28 @@
+# Build settings committed to the repo so every clinic site deploys identically
+# without anyone configuring it by hand in the Netlify UI.
+#
+# A netlify.toml OVERRIDES the settings in the Netlify UI. These values were
+# reconciled against the live Green Bay site's configured settings:
+#
+#   Build command       astro build   -> `npm run build` runs exactly this
+#   Publish directory   dist          -> unchanged
+#   Base directory      /             -> repo root is the default, so not set here
+#   Functions directory netlify/functions
+#                                     -> left unset on purpose. That is Netlify's
+#                                        default and no such directory exists in
+#                                        this repo; @astrojs/netlify emits its
+#                                        function to .netlify/v1/functions/ssr,
+#                                        which Netlify picks up on its own.
+#   Runtime             not set       -> now pinned below, see note.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# The only deliberate change from the current live configuration. Runtime was
+# unset, meaning builds follow whatever Netlify's default Node happens to be at
+# the time. Pinning it keeps every clinic site building the same way, and stops
+# a future change to Netlify's default from silently altering builds.
+# Astro 5 requires Node 18.20.8+, 20.3+ or 22+.
+[build.environment]
+  NODE_VERSION = "22"

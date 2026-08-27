@@ -1,0 +1,12 @@
+---
+import LandingPage from '../components/LandingPage.astro';
+import { getCollection } from 'astro:content';
+
+const clinics = await getCollection('clinic');
+const clinic = clinics[0].data;
+
+const campaign = (clinic.campaigns ?? [])[0];
+const headline = campaign?.headline ?? 'Start Your Health Restoration Journey';
+const subhead = campaign?.subhead ?? "We don't guess — we test. Book your first visit and find out what's really behind your health challenges.";
+---
+<LandingPage headline={headline} subhead={subhead} />

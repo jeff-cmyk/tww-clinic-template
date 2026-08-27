@@ -1,0 +1,43 @@
+---
+import LandingPage from '../../components/LandingPage.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  // Defined in here because Astro hoists getStaticPaths into its own scope,
+  // where the rest of the frontmatter isn't visible.
+  // Normalize whatever the CMS gives us — clinic staff type these by hand,
+  // so a stray space or capital letter shouldn't break the whole build.
+  const slugify = (value: string): string =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+  const clinics = await getCollection('clinic');
+  const clinic = clinics[0].data;
+
+  const seen = new Set<string>();
+
+  return (clinic.campaigns ?? [])
+    .map((campaign) => ({ campaign, slug: slugify(campaign.slug ?? '') }))
+    // Drop blank slugs and duplicates rather than failing the build.
+    .filter(({ slug }) => {
+      if (!slug || seen.has(slug)) return false;
+      seen.add(slug);
+      return true;
+    })
+    .map(({ campaign, slug }) => ({
+      params: { slug },
+      props: { campaign, seoTitle: clinic.seo.title },
+    }));
+}
+
+const { campaign, seoTitle } = Astro.props;
+---
+<LandingPage
+  headline={campaign.headline}
+  subhead={campaign.subhead}
+  offer={campaign.offer}
+  title={`${campaign.headline} | ${seoTitle}`}
+/>

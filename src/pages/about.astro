@@ -1,0 +1,313 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import RichText from '../components/RichText.astro';
+import BioModal from '../components/BioModal.astro';
+import { getCollection } from 'astro:content';
+
+const clinics = await getCollection('clinic');
+const clinic = clinics[0].data;
+
+const scheduleUrl = clinic.scheduling.type === 'neo' && clinic.scheduling.neoUrl
+  ? clinic.scheduling.neoUrl
+  : '/contact';
+---
+
+<BaseLayout title={clinic.seo.aboutTitle ?? `About | ${clinic.seo.title}`}>
+  <Nav />
+
+  <main>
+
+    <!-- ── Page Header ───────────────────────────────────── -->
+    <section class="page-header">
+      <div class="container page-header__inner">
+        <p class="label">About Us</p>
+        <h1 class="display-lg page-header__headline">
+          Health Restoration in<br/>
+          <span class="green">{clinic.address.city}, {clinic.address.state}</span>
+        </h1>
+      </div>
+    </section>
+
+    <!-- ── Mission ───────────────────────────────────────── -->
+    <section class="section mission">
+      <div class="container mission__grid">
+        <div class="mission__content reveal">
+          <p class="label">Our Philosophy</p>
+          <h2 class="display-md mission__headline">{clinic.about.headline}</h2>
+          <RichText text={clinic.about.body} class="mission__body" />
+          <div class="mission__statement accent-bar reveal reveal-delay-1">
+            <p>"{clinic.about.missionStatement}"</p>
+          </div>
+        </div>
+        <div class="mission__visual reveal reveal-delay-1">
+          {(clinic.about.pageImage || clinic.about.image)
+            ? <img src={clinic.about.pageImage ?? clinic.about.image} alt={clinic.about.headline} class="mission__image" />
+            : <div class="mission__image-placeholder"></div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Pillars ───────────────────────────────────────── -->
+    <section class="section section--tint pillars">
+      <div class="container">
+        <div class="pillars__header reveal">
+          <p class="label">How We Think</p>
+          <h2 class="display-md">The Three Sources of Interference</h2>
+        </div>
+        <div class="pillars__grid">
+          <div class="pillar reveal reveal-delay-1">
+            <div class="pillar__number">01</div>
+            <h3 class="pillar__name">Trauma</h3>
+            <p class="pillar__desc">Physical stressors — injuries, structural misalignments, and neurological interference that prevent your body from functioning at full capacity.</p>
+          </div>
+          <div class="pillar reveal reveal-delay-2">
+            <div class="pillar__number">02</div>
+            <h3 class="pillar__name">Toxins</h3>
+            <p class="pillar__desc">Chemical stressors — environmental toxins, poor nutrition, and substances that create inflammation and disrupt your body's natural healing processes.</p>
+          </div>
+          <div class="pillar reveal reveal-delay-3">
+            <div class="pillar__number">03</div>
+            <h3 class="pillar__name">Thoughts</h3>
+            <p class="pillar__desc">Emotional stressors — mental and emotional patterns that create physiological responses in the body, affecting hormones, immune function, and overall health.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Team ──────────────────────────────────────────── -->
+    <section class="section team">
+      <div class="container">
+        <div class="team__header reveal">
+          <p class="label">Your Care Team</p>
+          <h2 class="display-md">Meet the Team</h2>
+        </div>
+        <div class="team__grid">
+          {clinic.team.map((member, i) => (
+            <div class={`team-card reveal reveal-delay-${i + 1}`}>
+              <div class="team-card__photo">
+                {member.photo
+                  ? <img src={member.photo} alt={member.name} />
+                  : <div class="team-card__photo-placeholder"></div>
+                }
+              </div>
+              <div class="team-card__info">
+                <h3 class="team-card__name display-sm">{member.name}</h3>
+                <p class="team-card__role label">{member.role}</p>
+                <BioModal name={member.name} role={member.role} bio={member.bio} photo={member.photo} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA ───────────────────────────────────────────── -->
+    <section class="section--dark section cta-band reveal">
+      <div class="container cta-band__inner">
+        <div>
+          <p class="label">Ready?</p>
+          <h2 class="display-md cta-band__headline">
+            Start Your Health<br/>
+            <span class="green">Restoration Journey</span>
+          </h2>
+        </div>
+        <div class="cta-band__actions">
+          <a href={scheduleUrl} class="btn btn--primary">{clinic.scheduling.ctaText}</a>
+          <a href="/contact" class="btn btn--outline-light">Contact Us</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .green { color: var(--green); }
+
+  /* Page Header */
+  .page-header {
+    background: var(--dark);
+    color: var(--off-white);
+    padding-block: 6rem 4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .page-header__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .page-header__headline {
+    color: var(--off-white);
+  }
+
+  /* Mission */
+  .mission__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+  }
+
+  .mission__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .mission__headline {
+    color: var(--black);
+  }
+
+  /* Typography for this block lives in global.css — RichText.astro renders it
+     under its own style scope, so a scoped rule here would not apply. */
+
+  .mission__statement p {
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--black);
+    line-height: 1.6;
+    max-width: none;
+  }
+
+  .mission__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .mission__image-placeholder {
+    width: 100%;
+    aspect-ratio: 4/5;
+    background: linear-gradient(135deg, var(--off-white) 0%, #ddd 100%);
+  }
+
+  /* Pillars */
+  .pillars__header {
+    margin-bottom: 3rem;
+  }
+
+  .pillars__header h2 {
+    margin-top: 0.5rem;
+  }
+
+  .pillars__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5px;
+    background: var(--border);
+  }
+
+  .pillar {
+    background: var(--off-white);
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .pillar__number {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    color: var(--green);
+    line-height: 1;
+  }
+
+  .pillar__name {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    color: var(--black);
+  }
+
+  .pillar__desc {
+    font-size: 0.875rem;
+    color: #666;
+    line-height: 1.7;
+  }
+
+  /* Team */
+  .team__header {
+    margin-bottom: 3rem;
+  }
+
+  .team__header h2 {
+    margin-top: 0.5rem;
+  }
+
+  .team__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 3rem;
+  }
+
+  .team-card {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .team-card__photo {
+    aspect-ratio: 3/4;
+    overflow: hidden;
+  }
+
+  .team-card__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .team-card__photo-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--off-white) 0%, #ddd 100%);
+  }
+
+  .team-card__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+  }
+
+  .team-card__name { color: var(--black); }
+
+
+  /* CTA Band */
+  .cta-band__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .cta-band__headline {
+    color: var(--off-white);
+    margin-top: 1rem;
+  }
+
+  .cta-band__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  @media (max-width: 900px) {
+    .mission__grid { grid-template-columns: 1fr; gap: 3rem; }
+    .pillars__grid { grid-template-columns: 1fr; }
+    .cta-band__inner { grid-template-columns: 1fr; gap: 2.5rem; }
+    .team-card { grid-template-columns: 140px 1fr; }
+  }
+
+  @media (max-width: 560px) {
+    .team-card { grid-template-columns: 1fr; }
+  }
+</style>

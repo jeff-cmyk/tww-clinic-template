@@ -1,0 +1,308 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import RichText from '../components/RichText.astro';
+import { getCollection } from 'astro:content';
+
+const clinics = await getCollection('clinic');
+const clinic = clinics[0].data;
+
+const scheduleUrl = clinic.scheduling.type === 'neo' && clinic.scheduling.neoUrl
+  ? clinic.scheduling.neoUrl
+  : '/contact';
+---
+
+<BaseLayout title={clinic.seo.servicesTitle ?? `Services | ${clinic.seo.title}`}>
+  <Nav />
+
+  <main>
+
+    <!-- ── Page Header ───────────────────────────────────── -->
+    <section class="page-header">
+      <div class="container page-header__inner">
+        <p class="label">What We Offer</p>
+        <h1 class="display-lg page-header__headline">
+          Our Services in<br/>
+          <span class="green">{clinic.address.city}, {clinic.address.state}</span>
+        </h1>
+        <p class="page-header__sub">
+          Every service we offer starts with one principle — we don't guess, we test.
+          Your care plan is built around your biology, not a protocol.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── Services List ─────────────────────────────────── -->
+    <section class="section services">
+      <div class="container">
+        {clinic.services.map((service, i) => (
+          <div class={`service-row reveal ${i % 2 === 1 ? 'service-row--alt' : ''}`}>
+            <div class="service-row__number">0{i + 1}</div>
+            <div class="service-row__content">
+              <h2 class="service-row__name display-md">{service.name}</h2>
+              <RichText text={service.description} class="service-row__desc" clampLines={6} />
+              <a href={scheduleUrl} class="btn btn--outline-dark">
+                Book a Consultation
+              </a>
+            </div>
+            <div class="service-row__visual">
+              {service.image
+                ? <img src={service.image} alt={service.name} class="service-row__image" />
+                : <div class="service-row__image-placeholder"></div>
+              }
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ── How It Works ──────────────────────────────────── -->
+    <section class="section section--tint how-it-works">
+      <div class="container">
+        <div class="how-it-works__header reveal">
+          <p class="label">The Process</p>
+          <h2 class="display-md">Your Path to Restoration</h2>
+          <p class="how-it-works__intro">
+            Every patient journey at {clinic.name} follows the same proven framework —
+            built around your unique biology.
+          </p>
+        </div>
+        <div class="steps">
+          <div class="step reveal reveal-delay-1">
+            <div class="step__number">01</div>
+            <h3 class="step__name">Comprehensive Testing</h3>
+            <p class="step__desc">We run advanced diagnostics to get a complete picture of what's happening inside your body — not just surface-level symptoms.</p>
+          </div>
+          <div class="step__connector"></div>
+          <div class="step reveal reveal-delay-2">
+            <div class="step__number">02</div>
+            <h3 class="step__name">Your Restoration Plan</h3>
+            <p class="step__desc">We analyze your results and build a personalized Health Restoration Plan — a clear roadmap tailored to your unique needs.</p>
+          </div>
+          <div class="step__connector"></div>
+          <div class="step reveal reveal-delay-3">
+            <div class="step__number">03</div>
+            <h3 class="step__name">Guided Implementation</h3>
+            <p class="step__desc">Our team walks alongside you every step of the way — adjusting your plan as your body responds and heals.</p>
+          </div>
+          <div class="step__connector"></div>
+          <div class="step reveal reveal-delay-4">
+            <div class="step__number">04</div>
+            <h3 class="step__name">Total Wellness</h3>
+            <p class="step__desc">You take back control of your health — with the knowledge and tools to maintain it for the long term.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA ───────────────────────────────────────────── -->
+    <section class="section--dark section cta-band reveal">
+      <div class="container cta-band__inner">
+        <div>
+          <p class="label">Get Started</p>
+          <h2 class="display-md cta-band__headline">
+            Find Out What's Really<br/>
+            <span class="green">Holding You Back.</span>
+          </h2>
+          <p class="cta-band__sub">
+            Book a new patient visit at {clinic.name} and get real answers for the first time.
+          </p>
+        </div>
+        <div class="cta-band__actions">
+          <a href={scheduleUrl} class="btn btn--primary">{clinic.scheduling.ctaText}</a>
+          <a href="/contact" class="btn btn--outline-light">Contact Us</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .green { color: var(--green); }
+
+  /* Page Header */
+  .page-header {
+    background: var(--dark);
+    color: var(--off-white);
+    padding-block: 6rem 4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .page-header__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .page-header__headline { color: var(--off-white); }
+
+  .page-header__sub {
+    color: rgba(245,242,236,0.65);
+    font-size: 1rem;
+    max-width: 48ch;
+    margin-top: 0.5rem;
+  }
+
+  /* Services */
+  .service-row {
+    display: grid;
+    grid-template-columns: 4rem 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    padding-block: 4rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .service-row:last-child {
+    border-bottom: none;
+  }
+
+  .service-row--alt {
+    direction: rtl;
+  }
+
+  .service-row--alt > * {
+    direction: ltr;
+  }
+
+  .service-row__number {
+    font-family: var(--font-display);
+    font-size: 4rem;
+    color: var(--green);
+    line-height: 1;
+    opacity: 0.4;
+  }
+
+  .service-row__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .service-row__name { color: var(--black); }
+
+  /* Typography for this block lives in global.css — RichText.astro renders it
+     under its own style scope, so a scoped rule here would not apply. */
+
+  .service-row__image-placeholder {
+    width: 100%;
+    aspect-ratio: 16/10;
+    background: linear-gradient(135deg, var(--off-white) 0%, #ddd 100%);
+  }
+
+  /* How It Works */
+  .how-it-works__header {
+    margin-bottom: 3rem;
+  }
+
+  .how-it-works__header h2 {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .how-it-works__intro {
+    color: #555;
+    font-size: 0.95rem;
+    max-width: 52ch;
+  }
+
+  .steps {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 2rem;
+    background: var(--off-white);
+  }
+
+  .step__connector {
+    width: 1.5px;
+    align-self: stretch;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .step__number {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--green);
+    line-height: 1;
+  }
+
+  .step__name {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    color: var(--black);
+  }
+
+  .step__desc {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.7;
+  }
+
+  /* CTA Band */
+  .cta-band__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .cta-band__headline {
+    color: var(--off-white);
+    margin-block: 1rem;
+  }
+
+  .cta-band__sub {
+    color: #8A9A8E;
+    font-size: 0.95rem;
+    max-width: none;
+  }
+
+  .cta-band__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  @media (max-width: 900px) {
+    .service-row {
+      grid-template-columns: 3rem 1fr;
+    }
+
+    .service-row__visual {
+      display: none;
+    }
+
+    .service-row--alt {
+      direction: ltr;
+    }
+
+    .steps {
+      flex-direction: column;
+    }
+
+    .step__connector {
+      width: 100%;
+      height: 1.5px;
+      align-self: auto;
+    }
+
+    .cta-band__inner {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+  }
+</style>

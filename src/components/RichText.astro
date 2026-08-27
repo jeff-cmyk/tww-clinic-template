@@ -1,0 +1,155 @@
+---
+interface Props {
+  text: string;
+  /** Collapse to this many lines with a Read more toggle. 0 = never collapse. */
+  clampLines?: number;
+  class?: string;
+}
+
+const { text, clampLines = 0, class: className } = Astro.props;
+
+// The CMS stores these as YAML folded blocks, where a blank line between
+// paragraphs survives as a single newline. HTML collapses that to a space, which
+// is why long bios render as one unbroken wall of text. Split them back out.
+const paragraphs = text
+  .split(/\n+/)
+  .map((p) => p.trim())
+  .filter(Boolean);
+
+// Links the toggle button to the region it controls for screen readers.
+const uid = `rt-${Math.random().toString(36).slice(2, 9)}`;
+const collapsible = clampLines > 0 && paragraphs.length > 0;
+---
+
+<div class:list={['rich-text', className]}>
+  <div
+    class="rich-text__body"
+    id={uid}
+    data-clamp-lines={collapsible ? clampLines : undefined}
+  >
+    {paragraphs.map((p) => <p class="rich-text__p">{p}</p>)}
+  </div>
+
+  {collapsible && (
+    <button type="button" class="rich-text__toggle" aria-controls={uid} aria-expanded="false" hidden>
+      Read more
+    </button>
+  )}
+</div>
+
+<style>
+  /* Inherits font-size, colour and line-height from whatever class wraps it,
+     so each existing section keeps its own type scale. */
+  .rich-text__body > .rich-text__p {
+    margin: 0;
+  }
+
+  /* Uniform rhythm between paragraphs everywhere this component is used. */
+  .rich-text__body > .rich-text__p + .rich-text__p {
+    margin-top: 0.9em;
+  }
+
+  /* Applied by script only — without JS the full text stays visible rather
+     than being cut off with no way to expand it. */
+  .rich-text__body.is-clamped {
+    max-height: var(--rt-max-height);
+    overflow: hidden;
+    /* Fades on any background colour, unlike a gradient overlay. */
+    -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+  }
+
+  .rich-text__body.is-open {
+    max-height: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .rich-text__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.85rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green);
+    transition: color 0.2s ease;
+  }
+
+  .rich-text__toggle:hover {
+    color: var(--green-dark);
+  }
+
+  .rich-text__toggle:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 3px;
+  }
+
+  /* Chevron rotates to point up once expanded. */
+  .rich-text__toggle::after {
+    content: '';
+    width: 0.4rem;
+    height: 0.4rem;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-1px) rotate(45deg);
+    transition: transform 0.2s ease;
+  }
+
+  .rich-text__toggle[aria-expanded='true']::after {
+    transform: translateY(1px) rotate(-135deg);
+  }
+</style>
+
+<script>
+  function initRichText() {
+    document.querySelectorAll<HTMLElement>('.rich-text').forEach((wrap) => {
+      const body = wrap.querySelector<HTMLElement>('.rich-text__body[data-clamp-lines]');
+      const toggle = wrap.querySelector<HTMLButtonElement>('.rich-text__toggle');
+      if (!body || !toggle || body.dataset.rtReady) return;
+
+      const lines = Number(body.dataset.clampLines);
+      if (!lines) return;
+
+      const styles = getComputedStyle(body);
+      // line-height computes to "normal" when never set explicitly.
+      const lineHeight = parseFloat(styles.lineHeight) || parseFloat(styles.fontSize) * 1.7;
+      if (!lineHeight) return;
+
+      const maxHeight = lineHeight * lines;
+
+      // Leave short text alone — a Read more button that reveals one extra
+      // line is worse than no button at all.
+      if (body.scrollHeight <= maxHeight + lineHeight * 0.5) return;
+
+      body.style.setProperty('--rt-max-height', `${maxHeight}px`);
+      body.classList.add('is-clamped');
+      body.dataset.rtReady = 'true';
+      toggle.hidden = false;
+
+      toggle.addEventListener('click', () => {
+        const open = body.classList.toggle('is-open');
+        body.classList.toggle('is-clamped', !open);
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.textContent = open ? 'Read less' : 'Read more';
+      });
+    });
+  }
+
+  // Measuring before the webfonts land gives the wrong height, so wait for them.
+  if (document.fonts && document.fonts.status !== 'loaded') {
+    document.fonts.ready.then(initRichText);
+  } else {
+    initRichText();
+  }
+
+  // Re-run after Astro view transitions, if they get enabled later.
+  document.addEventListener('astro:page-load', initRichText);
+</script>
