@@ -88,11 +88,13 @@ field is missing, **the build fails** rather than deploying a broken page — a
 deliberate guardrail, since non-technical staff edit this directly. A failed
 build never takes the live site down; Netlify keeps serving the last good deploy.
 
-The admin panel's fields are defined separately in `public/admin/config.yml`.
+The admin panel's fields are defined separately in `src/cms/collections.yml`,
+which is appended verbatim to the generated backend block to produce
+`/admin/config.yml`.
 
 > ⚠️ **Keep those two files in sync.** `config.ts` decides what is valid;
-> `config.yml` decides what staff can enter. Add a required field to the schema
-> without adding it to the CMS and staff cannot produce a valid site.
+> `collections.yml` decides what staff can enter. Add a required field to the
+> schema without adding it to the CMS and staff cannot produce a valid site.
 
 The collection is deliberately single-entry — one repo and one Netlify site per
 clinic. `create: false` stops staff adding a second one.
@@ -132,8 +134,8 @@ any process has open — branch switches that add or remove folders will fail.
 
 **Local `/admin`:** use `http://localhost:4321/admin/index.html`. Astro's dev
 server does not resolve the bare `/admin` directory index; Netlify does in
-production. You cannot log in locally in any case — Identity and Git Gateway
-only exist on the deployed site.
+production. You cannot log in locally: the generated config has no repo or site
+id outside a Netlify build, and says so at the top of the served file.
 
 ---
 
@@ -141,16 +143,20 @@ only exist on the deployed site.
 
 ```text
 public/
-  admin/          Decap CMS (config.yml defines the admin panel's fields)
+  admin/          Decap CMS shell (index.html only — config is generated)
   images/clinic/  CMS-uploaded media
   _headers        Security headers applied by Netlify
 src/
+  cms/
+    collections.yml   The admin panel's fields, authored as plain YAML
   components/     Nav, Footer, LandingPage, RichText, BioModal
   content/
     clinic/       ← the single content file that drives the whole site
     config.ts     Zod schema validating that file
   layouts/        BaseLayout — meta tags, schema.org, analytics
-  pages/          One file per route
+  pages/
+    admin/config.yml.ts   Generates the CMS config per site at build time
+    ...           One file per route
   styles/         global.css — design tokens and shared classes
 netlify.toml      Build settings (overrides the Netlify UI)
 ```
