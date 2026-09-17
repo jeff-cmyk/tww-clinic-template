@@ -96,7 +96,7 @@
   <div class="wrap">
     <p class="eyebrow">The Wellness Way</p>
     <h1>Launch a Clinic Site</h1>
-    <p>Four steps, about five minutes. Tick them off as you go — your progress is saved in this browser.</p>
+    <p>Four steps, about five minutes. Tick them off as you go — your progress is saved in this browser. New sites stay hidden from Google until you give them their real domain, so there is no rush to get the content perfect first.</p>
   </div>
 </header>
 
@@ -117,6 +117,7 @@
       <p>This copies the template into a new GitHub repo, creates a Netlify site, and deploys it. When Netlify asks for a repository name, use the suggested name above.</p>
       <a class="btn" href="https://app.netlify.com/start/deploy?repository=https://github.com/jeff-cmyk/tww-clinic-template" target="_blank" rel="noopener">Deploy to Netlify</a>
       <div class="note"><strong>Give it a clinic-specific name.</strong> Every clinic needs its own repo — you can't reuse one.</div>
+      <div class="note"><strong>It works like a staging site until you add the real domain.</strong> The site is reachable straight away on a temporary <code>netlify.app</code> address, but it is deliberately hidden from Google while it still has placeholder content. Adding the clinic's custom domain is what puts it into search results — no switch to flip.</div>
     </div>
   </section>
 
@@ -174,7 +175,7 @@
       <tr><td>Hero → Background Image</td><td>Also used as the preview image when the site is shared on social media.</td></tr>
       <tr><td>Hours</td><td>Split days are fine — write them as <code>9:00am – 12:00pm &amp; 2:00pm - 6:00pm</code> and both blocks are published to Google.</td></tr>
       <tr><td>Tracking → GA4 / Pixel</td><td>Optional. Left blank, no analytics tags are added at all.</td></tr>
-      <tr><td>Custom domain</td><td>Added in Netlify under Domain management. Until then the site lives on its netlify.app address.</td></tr>
+      <tr><td>Custom domain</td><td>Added in Netlify under Domain management. <strong>This is the step that makes the site public in search.</strong> Until it is set the site stays on its netlify.app address and is blocked from Google, so add it only once the content is filled in.</td></tr>
     </tbody>
   </table>
 
