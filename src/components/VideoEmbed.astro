@@ -1,0 +1,197 @@
+---
+interface Props {
+  /** A Vimeo or YouTube URL, pasted by clinic staff in the CMS. */
+  url: string;
+  /** Shown before play. Usually the section's existing image. */
+  poster?: string;
+  /** Used for the play button's accessible label. */
+  title?: string;
+  class?: string;
+}
+
+const { url, poster, title = 'video', class: className } = Astro.props;
+
+/**
+ * Accepts whatever staff paste from the address bar and returns a privacy-
+ * friendly embed URL. Vimeo gets dnt=1 (no tracking cookies) and YouTube uses
+ * the nocookie host — worth having by default on a healthcare site.
+ *
+ * Returns null for anything unrecognised, so a mistyped URL degrades to the
+ * poster image rather than rendering a broken player.
+ */
+function toEmbedUrl(raw: string): string | null {
+  const value = (raw ?? '').trim();
+  if (!value) return null;
+
+  const vimeo = value.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (vimeo) {
+    return `https://player.vimeo.com/video/${vimeo[1]}?dnt=1&autoplay=1`;
+  }
+
+  const youtube = value.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i
+  );
+  if (youtube) {
+    return `https://www.youtube-nocookie.com/embed/${youtube[1]}?autoplay=1&rel=0`;
+  }
+
+  return null;
+}
+
+const embedUrl = toEmbedUrl(url);
+---
+
+{embedUrl ? (
+  <div class:list={['video', className]}>
+    {/* Click-to-play facade. The iframe is never loaded until someone asks for
+        it, so a page full of videos costs nothing for the visitors who do not
+        press play — which matters on pages that need to rank locally. */}
+    <button type="button" class="video__trigger" data-video-src={embedUrl} aria-label={`Play ${title}`}>
+      {poster
+        ? <img src={poster} alt="" class="video__poster" loading="lazy" />
+        : <span class="video__poster video__poster--empty"></span>
+      }
+      <span class="video__play" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" focusable="false">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </span>
+    </button>
+  </div>
+) : poster ? (
+  /* Unrecognised URL but there is an image — show that rather than a player. */
+  <img src={poster} alt="" class:list={['video__poster', className]} loading="lazy" />
+) : (
+  /* Unrecognised URL and no image. Renders the same neutral block the pages use
+     for missing media, so a mistyped link never leaves an empty column. */
+  <div class:list={['video', className]}>
+    <span class="video__poster video__poster--empty"></span>
+  </div>
+)}
+
+<style>
+  .video {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--dark, #1a1a1a);
+    overflow: hidden;
+  }
+
+  .video__trigger {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    display: block;
+  }
+
+  .video__poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .video__poster--empty {
+    display: block;
+    background: linear-gradient(135deg, #1f2b21 0%, #0e0e0e 100%);
+  }
+
+  /* Darkens on rest so the play button always has contrast, lifts on hover. */
+  .video__trigger::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.3);
+    transition: background 0.2s ease;
+  }
+
+  .video__trigger:hover::after {
+    background: rgba(10, 10, 10, 0.15);
+  }
+
+  .video__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4.5rem;
+    height: 4.5rem;
+    display: grid;
+    place-items: center;
+    background: var(--green, #6dc135);
+    color: #fff;
+    z-index: 1;
+    transition: background 0.2s ease, transform 0.2s ease;
+    /* Nudges the triangle optically centred inside the square. */
+    padding-left: 4px;
+  }
+
+  .video__trigger:hover .video__play {
+    background: var(--green-dark, #4a8a22);
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+
+  .video__trigger:focus-visible {
+    outline: 3px solid var(--green, #6dc135);
+    outline-offset: 3px;
+  }
+
+  .video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .video__play,
+    .video__trigger::after {
+      transition: none;
+    }
+    .video__trigger:hover .video__play {
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .video__play {
+      width: 3.5rem;
+      height: 3.5rem;
+    }
+  }
+</style>
+
+<script>
+  function initVideoEmbeds() {
+    document.querySelectorAll<HTMLButtonElement>('.video__trigger').forEach((trigger) => {
+      if (trigger.dataset.videoReady) return;
+      trigger.dataset.videoReady = 'true';
+
+      trigger.addEventListener('click', () => {
+        const src = trigger.dataset.videoSrc;
+        const wrap = trigger.closest('.video');
+        if (!src || !wrap) return;
+
+        const iframe = document.createElement('iframe');
+        iframe.src = src;
+        iframe.title = trigger.getAttribute('aria-label') ?? 'Video';
+        iframe.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen';
+        iframe.allowFullscreen = true;
+
+        trigger.replaceWith(iframe);
+        // The iframe is new to the page, so move focus into it for keyboard users.
+        iframe.focus();
+      });
+    });
+  }
+
+  initVideoEmbeds();
+  document.addEventListener('astro:page-load', initVideoEmbeds);
+</script>

@@ -76,6 +76,7 @@ collections:
           - { label: "Mission Statement", name: "missionStatement", widget: "string" }
           - { label: "Homepage Photo", name: "image", widget: "image", required: false }
           - { label: "About Page Photo", name: "pageImage", widget: "image", required: false, hint: "If not set, uses Homepage Photo" }
+          - { label: "🎬 Video (Vimeo or YouTube)", name: "video", widget: "string", required: false, hint: "Paste a Vimeo or YouTube link. Shows a play button over the photo above; the video only loads when someone clicks it." }
 
       # ── Team ──────────────────────────────────────────
       - label: "👥 Team Members"
@@ -98,6 +99,7 @@ collections:
           - { label: "Description", name: "description", widget: "text" }
           - { label: "Image", name: "image", widget: "image", required: false }
           - { label: "Icon", name: "icon", widget: "string", required: false }
+          - { label: "🎬 Video (Vimeo or YouTube)", name: "video", widget: "string", required: false, hint: "Paste a Vimeo or YouTube link. Shows a play button over the photo above; the video only loads when someone clicks it." }
 
       # ── Store ─────────────────────────────────────────
       - label: "🛒 Store"

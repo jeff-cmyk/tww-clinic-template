@@ -48,6 +48,7 @@ const clinicCollection = defineCollection({
       missionStatement: z.string(),
       image: z.string().optional(),
       pageImage: z.string().optional(),
+      video: z.string().optional(),
     }),
 
     team: z.array(z.object({
@@ -62,6 +63,7 @@ const clinicCollection = defineCollection({
       description: z.string(),
       icon: z.string().optional(),
       image: z.string().optional(),
+      video: z.string().optional(),
     })),
 
     seo: z.object({
