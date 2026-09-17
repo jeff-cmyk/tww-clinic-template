@@ -50,7 +50,7 @@
   .step__body { padding-left: 2rem; }
   .step.done .step__title { text-decoration: line-through; text-decoration-color: var(--green); color: var(--muted); }
   .step p { margin-top: .6rem; }
-  .step ul { margin: .6rem 0 0 1.1rem; }
+  .step ul, .step ol { margin: .6rem 0 0 1.1rem; }
   .step li { margin-bottom: .3rem; }
 
   .btn { display: inline-block; background: var(--green); color: #fff; font-size: .72rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; text-decoration: none; padding: .95rem 2rem; margin-top: 1rem; border: 0; cursor: pointer; font-family: var(--sans); }
@@ -61,7 +61,8 @@
   .field .k { font-weight: 600; color: var(--black); }
   .field .v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; color: var(--body); word-break: break-all; }
   .copy { font: inherit; font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--green); background: none; border: 1px solid var(--line); padding: .35rem .6rem; cursor: pointer; white-space: nowrap; }
-  .copy:hover { border-color: var(--green); }
+  .copy:hover:not([disabled]) { border-color: var(--green); }
+  .copy[disabled] { opacity: .35; cursor: not-allowed; }
 
   .note { background: var(--warn-bg); border-left: 3px solid var(--warn-line); padding: .85rem 1rem; margin-top: 1rem; font-size: .9rem; }
   .note strong { color: var(--black); }
@@ -164,6 +165,25 @@
     </div>
   </section>
 
+
+  <section class="step" data-step="5">
+    <div class="step__head">
+      <input type="checkbox" id="s5" />
+      <label class="step__title" for="s5"><span class="step__num">05</span> &nbsp;Go live</label>
+    </div>
+    <div class="step__body">
+      <p>Do this last, once the content is filled in. Up to now the site has been reachable but hidden from Google — this is the step that puts it into search results.</p>
+      <ol>
+        <li><strong>Add the domain in Netlify.</strong> Domain management → Add a domain. Then point the domain's DNS at Netlify from wherever it is registered. HTTPS is issued automatically once DNS resolves, which can take a few minutes.</li>
+        <li><strong>Redeploy the site.</strong> Deploys → Trigger deploy → Deploy site.</li>
+        <li><strong>Update the login URL in DecapBridge.</strong> The site's settings still point at the old <code>netlify.app</code> address.</li>
+      </ol>
+      <div class="note"><strong>The redeploy is not optional.</strong> Whether a site is visible to Google is decided when it builds, so adding the domain on its own changes nothing. Skip this and the clinic stays invisible in search with nothing appearing to be wrong. To check: open <code>your-domain.com/robots.txt</code> — if it says <code>Disallow: /</code>, it still needs a deploy.</div>
+      <div class="note"><strong>Forgetting the DecapBridge URL breaks staff logins.</strong> They get sent to the old address instead of the site they are trying to edit.</div>
+      <div class="note"><strong>If the clinic already has a website on that domain</strong>, changing the DNS takes the old one down as soon as it propagates. Treat that as a planned switchover: finish and check the new site on its netlify.app address first, agree a time with the clinic, and leave the old host running for a few days in case you need to go back.</div>
+    </div>
+  </section>
+
   <h2>Before it goes public</h2>
   <p>The site is live the moment it deploys, but it's full of placeholder text. These are the fields that cause real problems when they're missed.</p>
 
@@ -188,7 +208,7 @@
   </ul>
 
   <div class="bar">
-    <span class="progress"><b id="count">0</b> of 4 steps done</span>
+    <span class="progress"><b id="count">0</b> of 5 steps done</span>
     <button class="reset" id="reset">Start a new clinic</button>
   </div>
 
@@ -213,6 +233,10 @@
     var repo = s ? 'tww-' + s : 'tww-…';
     document.getElementById('reponame').textContent = repo;
     document.getElementById('f-repo').textContent = 'jeff-cmyk/' + repo;
+    Array.prototype.forEach.call(document.querySelectorAll('.copy'), function (b) {
+      var t = document.getElementById(b.dataset.copy);
+      b.disabled = !t || t.textContent.indexOf('…') !== -1;
+    });
 
     var done = 0;
     boxes.forEach(function (b) {
@@ -251,7 +275,10 @@
 
   document.querySelectorAll('.copy').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      var text = document.getElementById(btn.dataset.copy).textContent;
+      var el = document.getElementById(btn.dataset.copy);
+      // Before a clinic name is typed the repo field is a prompt, not a value.
+      if (!el || el.textContent.indexOf('…') !== -1) return;
+      var text = el.textContent;
       navigator.clipboard.writeText(text).then(function () {
         var old = btn.textContent;
         btn.textContent = 'Copied';
