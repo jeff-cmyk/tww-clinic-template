@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Launch a Clinic Site — The Wellness Way</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --green: #6DC135;
+    --green-dark: #4a8a22;
+    --dark: #162318;
+    --black: #111;
+    --body: #444;
+    --muted: #6b7280;
+    --line: #e5e2dc;
+    --tint: #f7f5f0;
+    --warn-bg: #fff8e6;
+    --warn-line: #e6c200;
+    --display: "Bebas Neue", sans-serif;
+    --sans: "DM Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); color: var(--body); background: #fff; line-height: 1.7; }
+  .wrap { width: min(50rem, 100% - 2rem); margin-inline: auto; }
+
+  header { background: var(--dark); color: #fff; padding: 3rem 0 2.5rem; }
+  header h1 { font-family: var(--display); font-size: clamp(2.25rem, 6vw, 3.5rem); line-height: 1; letter-spacing: .02em; }
+  header .eyebrow { font-size: .7rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--green); margin-bottom: .6rem; }
+  header p { color: rgba(255,255,255,.62); margin-top: .9rem; max-width: 46ch; }
+
+  main { padding: 2.5rem 0 4rem; }
+
+  .namer { background: var(--tint); border: 1px solid var(--line); padding: 1.25rem; margin-bottom: 2.5rem; }
+  .namer label { display: block; font-size: .7rem; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+  .namer input { width: 100%; font: inherit; font-size: 1rem; padding: .7rem .8rem; border: 1px solid var(--line); background: #fff; }
+  .namer input:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+  .namer .out { margin-top: .75rem; font-size: .9rem; color: var(--muted); }
+  .namer .out strong { color: var(--black); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  .step { border: 1px solid var(--line); border-left: 3px solid var(--line); padding: 1.4rem 1.5rem; margin-bottom: 1rem; transition: border-color .2s ease, background .2s ease; }
+  .step.done { border-left-color: var(--green); background: #fbfdf9; }
+  .step__head { display: flex; align-items: flex-start; gap: .85rem; }
+  .step__head input { margin-top: .45rem; width: 1.15rem; height: 1.15rem; accent-color: var(--green); flex: none; cursor: pointer; }
+  .step__title { font-family: var(--display); font-size: 1.5rem; line-height: 1.15; color: var(--black); letter-spacing: .01em; cursor: pointer; }
+  .step__num { color: var(--green); }
+  .step__body { padding-left: 2rem; }
+  .step.done .step__title { text-decoration: line-through; text-decoration-color: var(--green); color: var(--muted); }
+  .step p { margin-top: .6rem; }
+  .step ul { margin: .6rem 0 0 1.1rem; }
+  .step li { margin-bottom: .3rem; }
+
+  .btn { display: inline-block; background: var(--green); color: #fff; font-size: .72rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; text-decoration: none; padding: .95rem 2rem; margin-top: 1rem; border: 0; cursor: pointer; font-family: var(--sans); }
+  .btn:hover { background: var(--green-dark); }
+
+  .field { display: grid; grid-template-columns: 11rem 1fr auto; gap: .5rem; align-items: center; border-top: 1px solid var(--line); padding: .6rem 0; font-size: .9rem; }
+  .field:first-of-type { border-top: 0; }
+  .field .k { font-weight: 600; color: var(--black); }
+  .field .v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; color: var(--body); word-break: break-all; }
+  .copy { font: inherit; font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--green); background: none; border: 1px solid var(--line); padding: .35rem .6rem; cursor: pointer; white-space: nowrap; }
+  .copy:hover { border-color: var(--green); }
+
+  .note { background: var(--warn-bg); border-left: 3px solid var(--warn-line); padding: .85rem 1rem; margin-top: 1rem; font-size: .9rem; }
+  .note strong { color: var(--black); }
+
+  h2 { font-family: var(--display); font-size: 2rem; color: var(--black); letter-spacing: .01em; margin: 3rem 0 .4rem; }
+  h2 + p { color: var(--muted); margin-bottom: 1.25rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: .5rem; }
+  th, td { text-align: left; padding: .7rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  td:first-child { font-weight: 600; color: var(--black); white-space: nowrap; }
+
+  .bar { position: sticky; bottom: 0; background: #fff; border-top: 1px solid var(--line); padding: .9rem 0; margin-top: 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .progress { font-size: .85rem; color: var(--muted); }
+  .progress b { color: var(--green); }
+  .reset { font: inherit; font-size: .7rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; background: none; border: 1px solid var(--line); padding: .55rem 1rem; cursor: pointer; color: var(--muted); }
+  .reset:hover { border-color: var(--black); color: var(--black); }
+
+  footer { border-top: 1px solid var(--line); padding: 1.5rem 0 3rem; font-size: .82rem; color: var(--muted); }
+  a { color: var(--green-dark); }
+
+  @media (max-width: 620px) {
+    .field { grid-template-columns: 1fr; gap: .25rem; }
+    .field .copy { justify-self: start; }
+    .step__body { padding-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">The Wellness Way</p>
+    <h1>Launch a Clinic Site</h1>
+    <p>Four steps, about five minutes. Tick them off as you go — your progress is saved in this browser.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="namer">
+    <label for="clinic">Clinic city or name</label>
+    <input id="clinic" type="text" placeholder="Appleton" autocomplete="off" />
+    <p class="out">Suggested repo name: <strong id="reponame">tww-…</strong></p>
+  </div>
+
+  <section class="step" data-step="1">
+    <div class="step__head">
+      <input type="checkbox" id="s1" />
+      <label class="step__title" for="s1"><span class="step__num">01</span> &nbsp;Deploy the site</label>
+    </div>
+    <div class="step__body">
+      <p>This copies the template into a new GitHub repo, creates a Netlify site, and deploys it. When Netlify asks for a repository name, use the suggested name above.</p>
+      <a class="btn" href="https://app.netlify.com/start/deploy?repository=https://github.com/jeff-cmyk/tww-clinic-template" target="_blank" rel="noopener">Deploy to Netlify</a>
+      <div class="note"><strong>Give it a clinic-specific name.</strong> Every clinic needs its own repo — you can't reuse one.</div>
+    </div>
+  </section>
+
+  <section class="step" data-step="2">
+    <div class="step__head">
+      <input type="checkbox" id="s2" />
+      <label class="step__title" for="s2"><span class="step__num">02</span> &nbsp;Create the site in DecapBridge</label>
+    </div>
+    <div class="step__body">
+      <p>This is what lets clinic staff log in and edit. Go to <a href="https://decapbridge.com" target="_blank" rel="noopener">decapbridge.com</a> and add a site:</p>
+      <div class="field"><span class="k">GitHub repository</span><span class="v" id="f-repo">jeff-cmyk/tww-…</span><button class="copy" data-copy="f-repo">Copy</button></div>
+      <div class="field"><span class="k">Decap login URL</span><span class="v">https://your-site.netlify.app/admin/</span><span></span></div>
+      <div class="field"><span class="k">GitHub token</span><span class="v">The shared clinic token</span><span></span></div>
+      <div class="note"><strong>Keep the trailing slash</strong> on the login URL, and use the repo's real Netlify address. If the clinic gets a custom domain later, come back and update this field or logins will break.</div>
+    </div>
+  </section>
+
+  <section class="step" data-step="3">
+    <div class="step__head">
+      <input type="checkbox" id="s3" />
+      <label class="step__title" for="s3"><span class="step__num">03</span> &nbsp;Connect the two</label>
+    </div>
+    <div class="step__body">
+      <p>DecapBridge will show you URLs containing a long id, like <code>/sites/<strong>f53ffc7a-…</strong>/pkce</code>. Copy that id. Then in Netlify, on the new site, go to <em>Site configuration → Environment variables</em> and add:</p>
+      <div class="field"><span class="k">Key</span><span class="v" id="f-key">DECAP_SITE_ID</span><button class="copy" data-copy="f-key">Copy</button></div>
+      <div class="field"><span class="k">Value</span><span class="v">The id you just copied</span><span></span></div>
+      <p>Then <strong>redeploy</strong> — Deploys → Trigger deploy. Environment variables don't take effect until the next build.</p>
+      <div class="note"><strong>How to check it worked:</strong> open <code>your-site.netlify.app/admin/config.yml</code>. If the top says “THIS CMS IS NOT CONFIGURED”, the variable didn't take or you haven't redeployed yet.</div>
+    </div>
+  </section>
+
+  <section class="step" data-step="4">
+    <div class="step__head">
+      <input type="checkbox" id="s4" />
+      <label class="step__title" for="s4"><span class="step__num">04</span> &nbsp;Invite the clinic</label>
+    </div>
+    <div class="step__body">
+      <p>In DecapBridge, open the site and use <em>Manage collaborators</em> to invite staff by email. They sign in with a password, Google or Microsoft — no GitHub account needed.</p>
+      <ul>
+        <li>Give clinic staff the <strong>Collaborator</strong> role — they can edit content and nothing else.</li>
+        <li>Only make someone an <strong>Admin</strong> if they should be able to add and remove their own colleagues.</li>
+      </ul>
+      <p>Then send them their admin link: <code>https://your-site.netlify.app/admin/</code></p>
+    </div>
+  </section>
+
+  <h2>Before it goes public</h2>
+  <p>The site is live the moment it deploys, but it's full of placeholder text. These are the fields that cause real problems when they're missed.</p>
+
+  <table>
+    <thead><tr><th>Field</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td>Scheduling → NEO URL</td><td>Leave it blank and every “Schedule Appointment” button quietly falls back to a phone link. Nothing errors — the buttons just stop reaching the booking system.</td></tr>
+      <tr><td>Address → Lat / Long</td><td>Defaults to 0, 0, which is a real place in the Gulf of Guinea. It looks filled in but isn't. Get the real numbers from Google Maps — right-click the clinic's pin and the coordinates are at the top.</td></tr>
+      <tr><td>Hero → Background Image</td><td>Also used as the preview image when the site is shared on social media.</td></tr>
+      <tr><td>Hours</td><td>Split days are fine — write them as <code>9:00am – 12:00pm &amp; 2:00pm - 6:00pm</code> and both blocks are published to Google.</td></tr>
+      <tr><td>Tracking → GA4 / Pixel</td><td>Optional. Left blank, no analytics tags are added at all.</td></tr>
+      <tr><td>Custom domain</td><td>Added in Netlify under Domain management. Until then the site lives on its netlify.app address.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Adding video</h2>
+  <p>The About section and each Service can take a video. Paste a Vimeo or YouTube link into the Video field — that's it.</p>
+  <ul>
+    <li>The section's photo becomes the thumbnail, with a play button over it.</li>
+    <li>The video only loads when a visitor clicks it, so it doesn't slow the page down.</li>
+    <li>Video is deliberately not available on the homepage — that's the page that matters most for local search rankings.</li>
+  </ul>
+
+  <div class="bar">
+    <span class="progress"><b id="count">0</b> of 4 steps done</span>
+    <button class="reset" id="reset">Start a new clinic</button>
+  </div>
+
+</main>
+
+<footer class="wrap">
+  <p>Template repo: <a href="https://github.com/jeff-cmyk/tww-clinic-template" target="_blank" rel="noopener">jeff-cmyk/tww-clinic-template</a> — the README has the technical detail behind each step.</p>
+</footer>
+
+<script>
+  var KEY = 'tww-launch-v1';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.step input[type=checkbox]'));
+  var clinic = document.getElementById('clinic');
+  var count = document.getElementById('count');
+
+  function slug(v) {
+    return v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  function render() {
+    var s = slug(clinic.value);
+    var repo = s ? 'tww-' + s : 'tww-…';
+    document.getElementById('reponame').textContent = repo;
+    document.getElementById('f-repo').textContent = 'jeff-cmyk/' + repo;
+
+    var done = 0;
+    boxes.forEach(function (b) {
+      var step = b.closest('.step');
+      if (b.checked) { step.classList.add('done'); done++; }
+      else { step.classList.remove('done'); }
+    });
+    count.textContent = String(done);
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        clinic: clinic.value,
+        done: boxes.map(function (b) { return b.checked; })
+      }));
+    } catch (e) { /* private mode — progress just won't persist */ }
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data.clinic) clinic.value = data.clinic;
+      if (Array.isArray(data.done)) {
+        data.done.forEach(function (v, i) { if (boxes[i]) boxes[i].checked = !!v; });
+      }
+    } catch (e) { /* ignore corrupt or blocked storage */ }
+  }
+
+  boxes.forEach(function (b) {
+    b.addEventListener('change', function () { render(); save(); });
+  });
+  clinic.addEventListener('input', function () { render(); save(); });
+
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = document.getElementById(btn.dataset.copy).textContent;
+      navigator.clipboard.writeText(text).then(function () {
+        var old = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = old; }, 1200);
+      });
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    clinic.value = '';
+    boxes.forEach(function (b) { b.checked = false; });
+    render();
+    save();
+    clinic.focus();
+  });
+
+  load();
+  render();
+</script>
+
+</body>
+</html>
