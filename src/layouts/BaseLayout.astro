@@ -31,35 +31,40 @@ const dayMap: Record<string, string> = {
   sunday: 'Sunday',
 };
 
-// Parse "9:00am – 6:00pm" into 24hr open/close for schema
-function parseHours(str: string): { opens: string; closes: string } | null {
-  if (!str || str.toLowerCase() === 'closed') return null;
-  const match = str.match(/(\d+):(\d+)(am|pm)\s*[–-]\s*(\d+):(\d+)(am|pm)/i);
-  if (!match) return null;
+// Parse "9:00am – 6:00pm" into 24hr open/close for schema.
+// Clinics routinely split the day, e.g. "9:00am – 12:00pm & 2:00pm - 6:00pm".
+// Every range is captured: publishing only the first told Google the clinic was
+// closed all afternoon, so it would not surface for "open now" searches.
+function parseHours(str: string): { opens: string; closes: string }[] {
+  if (!str || str.toLowerCase() === 'closed') return [];
   const to24 = (h: string, m: string, ampm: string) => {
     let hour = parseInt(h);
     if (ampm.toLowerCase() === 'pm' && hour !== 12) hour += 12;
     if (ampm.toLowerCase() === 'am' && hour === 12) hour = 0;
     return `${String(hour).padStart(2, '0')}:${m}`;
   };
-  return {
-    opens:  to24(match[1], match[2], match[3]),
-    closes: to24(match[4], match[5], match[6]),
-  };
+  const ranges = [...str.matchAll(/(\d+):(\d+)\s*(am|pm)\s*[–—-]\s*(\d+):(\d+)\s*(am|pm)/gi)];
+  return ranges.map((m) => ({
+    opens: to24(m[1], m[2], m[3]),
+    closes: to24(m[4], m[5], m[6]),
+  }));
 }
 
-const openingHours = Object.entries(clinic.hours)
-  .map(([day, hours]) => {
-    const parsed = parseHours(hours);
-    if (!parsed) return null;
-    return {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": dayMap[day],
-      "opens": parsed.opens,
-      "closes": parsed.closes,
-    };
-  })
-  .filter(Boolean);
+const openingHours = Object.entries(clinic.hours).flatMap(([day, hours]) =>
+  parseHours(hours).map((range) => ({
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": dayMap[day],
+    "opens": range.opens,
+    "closes": range.closes,
+  }))
+);
+
+// Linking social profiles is a standard local-search signal. These were already
+// in the CMS but never published to the structured data.
+const sameAs = [clinic.social.facebook, clinic.social.instagram, clinic.social.youtube]
+  .filter((url): url is string => typeof url === 'string' && url.trim().length > 0);
+
+const hasRealCoordinates = Boolean(clinic.address.lat || clinic.address.lng);
 
 const schema = {
   "@context": "https://schema.org",
@@ -77,13 +82,23 @@ const schema = {
     "postalCode": clinic.address.zip,
     "addressCountry": "US"
   },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": clinic.address.lat,
-    "longitude": clinic.address.lng
-  },
+  // 0,0 is the schema default and sits in the Gulf of Guinea. Omitting geo is
+  // better than publishing a confidently wrong location.
+  ...(hasRealCoordinates && {
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": clinic.address.lat,
+      "longitude": clinic.address.lng
+    }
+  }),
+  ...(sameAs.length > 0 && { "sameAs": sameAs }),
   "openingHoursSpecification": openingHours
 };
+
+// Absolute canonical for this page, so the clinic's own domain is authoritative.
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).href
+  : Astro.url.pathname;
 ---
 
 <!DOCTYPE html>
@@ -92,6 +107,7 @@ const schema = {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalUrl} />
 
   <!-- Open Graph -->
   <meta property="og:title" content={title} />
